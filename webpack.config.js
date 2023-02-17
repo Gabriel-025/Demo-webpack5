@@ -1,46 +1,45 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
-const environment = require("./configuration/environment");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
-module.exports = {
-  entry: {
-    app: path.resolve(environment.paths.source, "js", "app.js"),
-  },
-  output: {
-    filename: "js/[name].js",
-    path: environment.paths.output,
-  },
-};
+const fs = require("fs");
+const glob = require("glob");
 
+const folders = glob.sync("./src/**/*.*").reduce((acc, path) => {
+  const entry = path.replace("./src/", "");
+  acc[entry] = path;
+  return acc;
+}, {});
+
+console.log(folders);
 module.exports = {
-  mode: "development",
-  entry: {
-    app: path.resolve(environment.paths.source, "js", "app.js"),
-    style: "./src/css/style.css",
-  },
-  devServer: {
-    static: "./dist",
-  },
+  mode: "production",
+  entry: folders,
   plugins: [
     new HtmlWebpackPlugin({
       title: "Output Management",
     }),
   ],
   output: {
-    filename: "[name].bundle.js",
+    filename: "[name]",
     path: path.resolve(__dirname, "dist"),
-    asyncChunks: true,
     clean: true,
   },
   module: {
     rules: [
       {
         test: /\.css$/i,
-        use: ["style-loader", "css-loader"],
+        use: [MiniCssExtractPlugin.loader, "css-loader"],
       },
     ],
   },
   optimization: {
     runtimeChunk: "single",
   },
+  plugins: [
+    new MiniCssExtractPlugin(),
+    new HtmlWebpackPlugin({
+      title: "Output Management",
+    }),
+  ],
 };
